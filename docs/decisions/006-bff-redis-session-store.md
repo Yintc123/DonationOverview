@@ -181,6 +181,137 @@ export interface SessionStore {
 
 業務模組（`SessionService`、`backendFetch`）**只依賴 interface**；具體 client 由 DI（簡單版：模組層 singleton 由 `getSessionStore()` 提供）注入。
 
+### 5.1 RedisSessionStore 實作要點
+
+#### 5.1.1 ioredis client 生命週期
+
+**Singleton + lazy 連線**：
+
+```ts
+// src/lib/session/store/redis-client.ts
+import 'server-only'
+import { Redis, type RedisOptions } from 'ioredis'
+import { env } from '@/lib/config'
+
+let client: Redis | undefined
+
+export function getRedisClient(): Redis {
+  if (client) return client
+  client = new Redis(env.REDIS_URL!, buildOptions())
+  client.on('error', (e) => log.warn({ err: e.message }, 'redis.error'))
+  // 不做 client.on('connect', ...) 阻塞；ioredis 內部會 queue 命令直到連線
+  return client
+}
+
+function buildOptions(): RedisOptions {
+  const tlsFromUrl = env.REDIS_URL!.startsWith('rediss://')
+  return {
+    connectTimeout: env.REDIS_CONNECT_TIMEOUT_MS,
+    commandTimeout: env.REDIS_COMMAND_TIMEOUT_MS,
+    maxRetriesPerRequest: 3,                       // command 層 retry，超過拋出
+    retryStrategy: (times) => Math.min(times * 100, 2000),  // 連線層 backoff，0.1s → 2s
+    enableReadyCheck: true,
+    enableOfflineQueue: true,                      // 啟動期 command 排隊；超過 commandTimeout 才拋
+    lazyConnect: false,                            // 模組第一次取得即連線（避免首請求 latency spike）
+    tls: env.REDIS_TLS_ENABLED === '1' || tlsFromUrl ? {} : undefined,
+    keyPrefix: `${env.REDIS_KEY_PREFIX}:`,         // ioredis 自動加前綴；應用程式碼 key 不再帶 prefix
+  }
+}
+
+/** Graceful shutdown（process.on('SIGTERM') / 測試 afterAll 呼叫） */
+export async function closeRedisClient(): Promise<void> {
+  try { await client?.quit() } catch { /* swallow */ }
+  client = undefined
+}
+```
+
+理由：
+- **Singleton**：Cloud Run instance 內共用一條連線；ioredis 自動 pipeline，多 command 高效
+- **`lazyConnect: false`**：避免首個 user request 才連線造成 latency spike；模組載入時即建立連線
+- **`retryStrategy`**：連線層斷掉自動重連（exp backoff 上限 2s），不需手動管理重連
+- **`maxRetriesPerRequest: 3`**：避免 Redis 抖動時 command 直接拋出；超過 3 次才 fail
+- **`enableOfflineQueue: true`**：連線未就緒時 command 排隊；上限受 `commandTimeout` 控制
+- **`keyPrefix`**：使用 ioredis 內建前綴，應用程式碼用「裸 key」（`session:abc`），實際送 Redis 為 `jko-bff:session:abc`
+
+#### 5.1.2 原子操作模式
+
+**`set` — 寫 session + TTL**
+
+```ts
+await client.set(`session:${sessionId}`, JSON.stringify(stored), 'EX', ttlSeconds)
+// 'EX' 為 SET 的 modifier，與寫值同一 round-trip 設 TTL；禁止用 SETEX（deprecated）
+```
+
+**`get` + sliding TTL — 用 Lua 確保原子性**
+
+兩段命令（GET + EXPIRE）若分開做，存在 key 在中間被 DEL 的縫隙。改用 Lua：
+
+```ts
+const SLIDING_GET = `
+  local v = redis.call('GET', KEYS[1])
+  if v then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
+  return v
+`
+const cached = await client.eval(SLIDING_GET, 1, `session:${sessionId}`, ttlSeconds)
+return cached ? JSON.parse(cached as string) : null
+```
+
+Script 用 `client.defineCommand` 註冊一次，避免每次 `EVAL` 傳整段 source：
+
+```ts
+client.defineCommand('slidingGet', { numberOfKeys: 1, lua: SLIDING_GET })
+// 之後：await (client as any).slidingGet(key, ttl)
+```
+
+**`acquireLock`**
+
+```ts
+const lockToken = crypto.randomBytes(16).toString('base64url')
+const result = await client.set(`refresh-lock:${userId}`, lockToken, 'NX', 'EX', ttlSeconds)
+return result === 'OK' ? lockToken : null
+```
+
+**`releaseLock` — Lua 原子比對 + DEL**
+
+```ts
+const RELEASE_LOCK = `
+  if redis.call('GET', KEYS[1]) == ARGV[1] then
+    return redis.call('DEL', KEYS[1])
+  else
+    return 0
+  end
+`
+// 註冊：client.defineCommand('releaseLock', { numberOfKeys: 1, lua: RELEASE_LOCK })
+const result = await (client as any).releaseLock(`refresh-lock:${userId}`, lockToken)
+return result === 1
+```
+
+**`ping`** — 健康檢查
+
+```ts
+async ping(): Promise<boolean> {
+  try { return (await client.ping()) === 'PONG' }
+  catch { return false }
+}
+```
+
+#### 5.1.3 錯誤映射
+
+| ioredis 錯誤 | BFF 錯誤 |
+|---|---|
+| `MaxRetriesPerRequestError` | `BackendUpstreamError`（"Redis unavailable"） |
+| `ConnectionError` / `ECONNREFUSED` | `BackendUpstreamError` |
+| `ReplyError`（Lua 腳本錯）| `INTERNAL_ERROR`（屬程式 bug） |
+| Command timeout | `BackendUpstreamError` |
+
+由 `RedisSessionStore` 每個 method 在 catch 中轉譯。**禁止讓 raw ioredis 錯誤洩漏到 handler 層**。
+
+#### 5.1.4 測試與 Mock 模式
+
+- 單元測試：用 `InMemorySessionStore`，零外部依賴
+- 契約測試（§10.1）：對 docker-compose 起的 Redis 跑
+- **`USE_MOCK=1` 時仍用 `RedisSessionStore`** — 因為 session 是 BFF 內部狀態，與「是否打真後端」無關；mock 模式僅影響 backendFetch 是否打網路
+
 ---
 
 ## 6. Refresh 協調流程（spec 001 §3.4 取代版）
