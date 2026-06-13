@@ -95,8 +95,15 @@ jobs:
         working-directory: infra/healthcheck
         run: |
           IMAGE="$REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-          docker build -t "$IMAGE" .
-          docker push "$IMAGE"
+          if aws ecr describe-images \
+               --repository-name "$ECR_REPOSITORY" \
+               --image-ids "imageTag=$IMAGE_TAG" \
+               --region "$AWS_REGION" >/dev/null 2>&1; then
+            echo "Image $IMAGE already in ECR, skipping build & push (idempotent re-run)"
+          else
+            docker build -t "$IMAGE" .
+            docker push "$IMAGE"
+          fi
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
 
       - name: Substitute task definition placeholders
