@@ -75,4 +75,4 @@ Browser ──(session cookie)──> Next.js BFF ──(JWT Bearer)──> Fast
 - `@fastify/redis`、`ioredis`
 - `@fastify/swagger`、`@fastify/swagger-ui`
 - `@sinclair/typebox`(schema + 型別推導)
-- `prisma`、`@prisma/client`
+- `prisma`、`@prisma/client`(ORM 選型完整評估見 ADR 007)

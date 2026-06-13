@@ -33,6 +33,10 @@ docs/prompts/
 - BFF 架構決策（Next.js 為何也兼當 BFF）
 - 文件結構重組（specs / brief / architecture / README 的職責劃分）
 
+## 已完成
+
+- [004-orm-prisma-vs-typeorm.md](004-orm-prisma-vs-typeorm.md) — ORM 選型補正(對應 ADR 007)
+
 ## 命名規則
 
 精選檔：`NNN-<kebab-topic>.md`，例：
