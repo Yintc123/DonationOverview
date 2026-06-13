@@ -10,8 +10,8 @@
 
 | 子專案 | 技術棧 | README |
 |---|---|---|
-| `frontend/` | TypeScript · Next.js 16（App Router）· TailwindCSS · BFF | [frontend/README.md](./frontend/README.md) |
-| `backend/` | TypeScript · Fastify · Prisma · PostgreSQL · Redis | [backend/README.md](./backend/README.md) |
+| `frontend/` | TypeScript · Next.js 16（App Router）· TailwindCSS · BFF | [frontend/README.md](https://github.com/Yintc123/DonationFrontend/) |
+| `backend/` | TypeScript · Fastify · Prisma · PostgreSQL · Redis | [backend/README.md](https://github.com/Yintc123/DonationBackend/) |
 | `infra/` | Docker Compose（PG + Redis on EC2）· Flask healthcheck（CI/CD pilot） | — |
 
 ## 部署架構
