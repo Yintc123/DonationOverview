@@ -36,6 +36,7 @@ docs/prompts/
 ## 已完成
 
 - [004-orm-prisma-vs-typeorm.md](004-orm-prisma-vs-typeorm.md) — ORM 選型補正(對應 ADR 007)
+- [005-bff-infrastructure.md](005-bff-infrastructure.md) — BFF Spec 001 整套 TDD 實作 + audit + 修正(對應 frontend/docs/specs/001-*)
 
 ## 命名規則
 
