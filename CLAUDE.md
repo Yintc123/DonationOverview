@@ -34,6 +34,7 @@
 
 - `docs/decisions/` — 專案級 ADR（架構決策紀錄），作業要求至少 3 個
 - `docs/prompts/` — Prompt 紀錄（raw + 精選）
+- `docs/tech/` — 技術清單（AWS 服務清單、第三方依賴、成本估算等）
 - `frontend/docs/brief.md` — 前端需求書（作業原文 + 範圍）
 - `frontend/docs/architecture.md` — 前端架構（BFF、資料流）
 - `frontend/docs/specs/` — 實作規格（API、UI 行為）

@@ -52,6 +52,7 @@
 
 - [`docs/decisions/`](./docs/decisions/) — 專案級 ADR（架構決策紀錄）
 - [`docs/prompts/`](./docs/prompts/) — 與 AI 的對話紀錄（raw + 精選版）
+- [`docs/tech/`](./docs/tech/) — 技術清單（AWS 服務、設定、月費估算）
 - [`CLAUDE.md`](./CLAUDE.md) — Claude Code 專案級指示
 
 ## AI 使用聲明
