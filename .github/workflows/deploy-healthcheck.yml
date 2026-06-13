@@ -16,7 +16,7 @@ env:
   AWS_REGION: ap-southeast-2
   ECR_REPOSITORY: jko_healthcheck
   ECS_CLUSTER: warmhearted-crocodile-18gqvo-jko-cluster
-  ECS_SERVICE: jko-healthcheck
+  ECS_SERVICE: jko-healthcheck-service-hq27okrx
   CONTAINER_NAME: jko-healthcheck
   TASK_DEFINITION: infra/healthcheck/.aws/task-definition.json
 
