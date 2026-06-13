@@ -1,0 +1,33 @@
+# Secrets / credentials
+.env
+.env.*
+!.env.example
+.mcp.json
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Claude Code local state
+.claude/local/
+.claude/settings.local.json
+
+# folder
+frontend/
+backend/
