@@ -28,6 +28,9 @@ out/
 .claude/local/
 .claude/settings.local.json
 
+# Prompt raw transcripts — keep local only (may contain tokens / secrets)
+docs/prompts/raw/
+
 # folder
 frontend/
 backend/
