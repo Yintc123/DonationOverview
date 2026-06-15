@@ -39,6 +39,7 @@ docs/prompts/
 - [005-bff-infrastructure.md](005-bff-infrastructure.md) — BFF Spec 001 整套 TDD 實作 + audit + 修正(對應 frontend/docs/specs/001-*)
 - [006-ecs-cicd-pilot.md](006-ecs-cicd-pilot.md) — Flask healthcheck 跑通 GHA → ECR → ECS Fargate pipeline(對應 ADR 008)
 - [007-donation-item-data-model.md](007-donation-item-data-model.md) — 捐款項目資料模型 1 表 → 5 表 + 雙語系演進(對應 backend ADR 001 / 002 / 003、spec 015 / 016 / 017)
+- [008-cache-strategy.md](008-cache-strategy.md) — Public read API Redis cache 策略(對應 ADR 011、backend spec 019、bonus buildKey 雙前綴 bug 修復)
 
 ## 命名規則
 
