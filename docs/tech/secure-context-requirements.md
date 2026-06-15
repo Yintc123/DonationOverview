@@ -31,7 +31,14 @@
 | Service Worker / Push Notification | （未用） | 註冊失敗 |
 | Geolocation `getCurrentPosition` | （未用） | 直接拒絕 |
 
-`<ShareIconButton>` 已實作 share API + clipboard 兩層 fallback；HTTP 環境下**兩層都會 undefined**，落到第三層 `toast.error('無法分享')`。
+`<ShareIconButton>` 已實作 share API + clipboard 兩層 fallback；HTTP 環境下**兩層都會 undefined**，落到 error toast。Toast 文案依 `window.isSecureContext` 分流：
+
+| `isSecureContext` | toast | 對應情境 |
+|---|---|---|
+| `false` | 「HTTP 無法使用分享功能」 | 純 HTTP prod（最常見） |
+| `true` | 「無法分享」 | HTTPS 下罕見路徑：老瀏覽器無 share API + iframe 擋 clipboard 等 |
+
+這樣使用者回報「prod 跳無法分享」時，看到精確訊息能直接導向部署層，不會浪費時間找 client bug。
 
 ---
 
