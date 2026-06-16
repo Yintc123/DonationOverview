@@ -4,6 +4,22 @@
 
 > 設計稿：Figma《2026 全端面試作業 - web》
 
+## AI 使用聲明
+
+本專案（含 `frontend/`、`backend/`、`infra/`）開發過程使用 AI 工具輔助。
+
+### 使用的 AI 工具
+- Claude（[Claude Code](https://claude.com/claude-code) CLI，模型：Opus 4.7）
+
+### AI 角色
+技術選型討論、ADR 撰寫、骨架生成、code review、按規格 TDD 實作。
+
+### 人工角色
+需求理解、架構決策、實作驗收、安全審查、跨 spec 一致性把關。
+
+### Prompt 紀錄
+保存於 [`docs/prompts/`](./docs/prompts/)（raw JSONL + 精選 Markdown）。各子專案 README 內有更細的負責範圍說明。
+
 ## 結構
 
 本 repo 為**專案層級總目錄**，`frontend/` 與 `backend/` 各自為獨立 git repo。
@@ -55,7 +71,3 @@
 - [`docs/tech/`](./docs/tech/) — 技術清單（AWS 服務、設定、月費估算）
 - [`CLAUDE.md`](./CLAUDE.md) — Claude Code 專案級指示
 
-## AI 使用聲明
-
-開發過程使用 [Claude Code](https://claude.com/claude-code)（Opus 4.7）輔助。
-各子專案 README 內有更細的負責範圍說明。
